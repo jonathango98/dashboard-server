@@ -24,13 +24,10 @@ router.get('/', async (req, res) => {
       traffic_model: 'best_guess',
     };
 
-    if (origin) {
-      params.origin = origin;
-    } else {
-      // Use client IP for rough origin (Maps API accepts this via geocoding workaround)
-      // Fallback: use a generic "current location" placeholder — the caller should supply origin
-      params.origin = req.headers['x-forwarded-for']?.split(',')[0]?.trim() || req.socket.remoteAddress;
+    if (!origin) {
+      return res.status(400).json({ error: 'origin is required' });
     }
+    params.origin = origin;
 
     const response = await axios.get('https://maps.googleapis.com/maps/api/directions/json', {
       params,
