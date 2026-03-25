@@ -7,6 +7,7 @@ const weatherRouter = require('./routes/weather');
 const driveRouter = require('./routes/drive');
 const geocodeRouter = require('./routes/geocode');
 const bibleRouter = require('./routes/bible');
+const exchangeRouter = require('./routes/exchange');
 
 const app = express();
 const PORT = process.env.PORT || 3001;
@@ -38,7 +39,7 @@ app.use('/api/weather', apiLimiter, weatherRouter);
 app.use('/api/drive', apiLimiter, driveRouter);
 app.use('/api/geocode', apiLimiter, geocodeRouter);
 app.use('/api/bible', bibleRouter);
-
+app.use('/api/exchange', apiLimiter, exchangeRouter);
 app.get('/health', (req, res) => res.json({ status: 'ok' }));
 
 app.listen(PORT, () => {
