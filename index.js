@@ -5,6 +5,7 @@ const cors = require('cors');
 const weatherRouter = require('./routes/weather');
 const driveRouter = require('./routes/drive');
 const geocodeRouter = require('./routes/geocode');
+const bibleRouter = require('./routes/bible');
 
 const app = express();
 const PORT = process.env.PORT || 3001;
@@ -15,6 +16,7 @@ app.use(express.json());
 app.use('/api/weather', weatherRouter);
 app.use('/api/drive', driveRouter);
 app.use('/api/geocode', geocodeRouter);
+app.use('/api/bible', bibleRouter);
 
 app.get('/health', (req, res) => res.json({ status: 'ok' }));
 
