@@ -24,10 +24,16 @@ router.get('/', async (req, res) => {
       traffic_model: 'best_guess',
     };
 
-    if (!origin) {
-      return res.status(400).json({ error: 'origin is required' });
+    if (origin) {
+      params.origin = origin;
+    } else {
+      const geo = await axios.post(
+        `https://www.googleapis.com/geolocation/v1/geolocate?key=${apiKey}`,
+        { considerIp: true }
+      );
+      const { lat, lng } = geo.data.location;
+      params.origin = `${lat},${lng}`;
     }
-    params.origin = origin;
 
     const response = await axios.get('https://maps.googleapis.com/maps/api/directions/json', {
       params,

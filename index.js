@@ -8,6 +8,7 @@ const driveRouter = require('./routes/drive');
 const geocodeRouter = require('./routes/geocode');
 const bibleRouter = require('./routes/bible');
 const exchangeRouter = require('./routes/exchange');
+const gradientRouter = require('./routes/gradient');
 
 const app = express();
 const PORT = process.env.PORT || 3001;
@@ -33,6 +34,15 @@ const apiLimiter = rateLimit({
   message: { error: 'Too many requests, please try again later.' },
 });
 
+// Gemini calls cost API quota — keep this tighter than the general proxy limit
+const gradientLimiter = rateLimit({
+  windowMs: 60 * 1000,
+  max: 10,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { error: 'Too many requests, please try again in a minute.' },
+});
+
 app.use(globalLimiter);
 
 app.use('/api/weather', apiLimiter, weatherRouter);
@@ -40,6 +50,7 @@ app.use('/api/drive', apiLimiter, driveRouter);
 app.use('/api/geocode', apiLimiter, geocodeRouter);
 app.use('/api/bible', bibleRouter);
 app.use('/api/exchange', apiLimiter, exchangeRouter);
+app.use('/api/gradient', gradientLimiter, gradientRouter);
 app.get('/health', (req, res) => res.json({ status: 'ok' }));
 
 app.listen(PORT, () => {
