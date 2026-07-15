@@ -161,7 +161,7 @@ router.post('/', async (req, res) => {
 
           // Faster response for simple palette generation
           thinkingConfig: {
-            thinkingLevel: 'minimal',
+            thinkingLevel: 'MINIMAL',
           },
         },
       },
@@ -172,7 +172,9 @@ router.post('/', async (req, res) => {
           'x-goog-api-key': apiKey,
         },
 
-        timeout: 15000,
+        // Gemini 3.5 Flash has been observed taking 12s+ even on minimal
+        // thinking; 15s caused intermittent 502s in production
+        timeout: 30000,
       }
     );
 

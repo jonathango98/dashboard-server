@@ -13,6 +13,10 @@ const gradientRouter = require('./routes/gradient');
 const app = express();
 const PORT = process.env.PORT || 3001;
 
+// Railway terminates TLS at a single proxy hop; without this, express-rate-limit
+// keys every client by the proxy's IP and logs ERR_ERL_UNEXPECTED_X_FORWARDED_FOR
+app.set('trust proxy', 1);
+
 app.use(cors({ origin: process.env.ALLOWED_ORIGIN || 'http://localhost:5173' }));
 app.use(express.json());
 
