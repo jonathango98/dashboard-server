@@ -40,19 +40,23 @@ const RESPONSE_SCHEMA = {
 
 function buildPrompt(userPrompt) {
   return `
-You are a professional color palette designer.
+You are a professional color palette designer creating a mesh gradient background.
 
-Create exactly 4 harmonious hex colors for a smooth blurry mesh gradient background.
+Create exactly 4 hex colors with these roles, ordered darkest to brightest:
+1. A deep base color — dark, rich, sets the mood (lightness roughly 10-35%)
+2. A mid-tone wash — hue adjacent to the base
+3. A second mid-tone wash — hue adjacent to the first wash
+4. A bright accent glow — the light source of the scene (lightness roughly 65-90%)
 
-Consider:
-- mood
-- lighting
-- atmosphere
-- time of day
-- emotional tone
+Rules:
+- Keep hues mostly analogous (neighbors on the color wheel); at most ONE color
+  may contrast for tension.
+- Spread the lightness values wide apart — the gradient needs depth, and colors
+  with similar lightness flatten into each other.
+- Every color must be saturated enough to survive blending; avoid grayish,
+  desaturated mid-tones, which turn to mud when washes overlap.
 
-Colors should blend naturally together.
-Avoid harsh combinations unless the scene requires it.
+Consider mood, lighting, atmosphere, time of day, and emotional tone.
 
 Scene:
 "${userPrompt}"
@@ -60,10 +64,10 @@ Scene:
 Return only JSON:
 {
   "colors": [
-    "#AABBCC",
-    "#DDEEFF",
     "#112233",
-    "#445566"
+    "#445566",
+    "#AABBCC",
+    "#DDEEFF"
   ]
 }
 `;
