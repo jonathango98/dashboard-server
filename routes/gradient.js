@@ -3,8 +3,20 @@ const axios = require('axios');
 
 const router = express.Router();
 
-const GEMINI_URL =
-  'https://generativelanguage.googleapis.com/v1beta/models/gemini-3.5-flash:generateContent';
+// Preferred model first; fall back when it's overloaded (503) or slow.
+// flash-lite runs thinking off by default, so no thinkingConfig for it.
+const GEMINI_MODELS = [
+  {
+    model: 'gemini-3.5-flash',
+    thinkingConfig: { thinkingLevel: 'MINIMAL' },
+  },
+  {
+    model: 'gemini-3.1-flash-lite',
+  },
+];
+
+const geminiUrl = (model) =>
+  `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent`;
 
 const HEX_RE = /^#[0-9a-fA-F]{6}$/;
 const MAX_PROMPT_LEN = 200;
@@ -141,77 +153,74 @@ router.post('/', async (req, res) => {
   }
 
 
-  try {
-    const response = await axios.post(
-      GEMINI_URL,
-      {
-        contents: [
-          {
-            parts: [
-              {
-                text: buildPrompt(prompt.trim()),
-              },
-            ],
-          },
-        ],
+  for (const { model, thinkingConfig } of GEMINI_MODELS) {
+    try {
+      const response = await axios.post(
+        geminiUrl(model),
+        {
+          contents: [
+            {
+              parts: [
+                {
+                  text: buildPrompt(prompt.trim()),
+                },
+              ],
+            },
+          ],
 
-        generationConfig: {
-          responseMimeType: 'application/json',
-          responseSchema: RESPONSE_SCHEMA,
-
-          // Faster response for simple palette generation
-          thinkingConfig: {
-            thinkingLevel: 'MINIMAL',
+          generationConfig: {
+            responseMimeType: 'application/json',
+            responseSchema: RESPONSE_SCHEMA,
+            ...(thinkingConfig ? { thinkingConfig } : {}),
           },
         },
-      },
 
-      {
-        headers: {
-          'Content-Type': 'application/json',
-          'x-goog-api-key': apiKey,
-        },
+        {
+          headers: {
+            'Content-Type': 'application/json',
+            'x-goog-api-key': apiKey,
+          },
 
-        // Gemini 3.5 Flash has been observed taking 12s+ even on minimal
-        // thinking; 15s caused intermittent 502s in production
-        timeout: 30000,
+          // Gemini 3.5 Flash has been observed taking 12s+ even on minimal
+          // thinking; keep per-attempt timeout short enough that the
+          // fallback model still gets a turn within the request
+          timeout: 20000,
+        }
+      );
+
+      const colors = parseGeminiResponse(
+        response.data
+      );
+
+      return res.json({
+        colors,
+      });
+
+    } catch (err) {
+
+      if (err.response) {
+        console.error(
+          `Gemini API Error (${model}):`,
+          err.response.status,
+          JSON.stringify(
+            err.response.data,
+            null,
+            2
+          )
+        );
+      } else {
+        console.error(
+          `Gradient generation error (${model}):`,
+          err.message
+        );
       }
-    );
-
-
-    const colors = parseGeminiResponse(
-      response.data
-    );
-
-    return res.json({
-      colors,
-    });
-
-
-  } catch (err) {
-
-    if (err.response) {
-      console.error(
-        'Gemini API Error:',
-        err.response.status,
-        JSON.stringify(
-          err.response.data,
-          null,
-          2
-        )
-      );
-    } else {
-      console.error(
-        'Gradient generation error:',
-        err.message
-      );
+      // fall through to the next model
     }
-
-
-    return res.status(502).json({
-      error: 'Failed to generate gradient colors',
-    });
   }
+
+  return res.status(502).json({
+    error: 'Failed to generate gradient colors',
+  });
 });
 
 
