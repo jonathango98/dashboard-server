@@ -17,7 +17,12 @@ const PORT = process.env.PORT || 3001;
 // keys every client by the proxy's IP and logs ERR_ERL_UNEXPECTED_X_FORWARDED_FOR
 app.set('trust proxy', 1);
 
-app.use(cors({ origin: process.env.ALLOWED_ORIGIN || 'http://localhost:5173' }));
+// ALLOWED_ORIGIN accepts a comma-separated list, e.g. "https://a.com,https://b.com"
+const allowedOrigins = (process.env.ALLOWED_ORIGIN || 'http://localhost:5173')
+  .split(',')
+  .map((o) => o.trim())
+  .filter(Boolean);
+app.use(cors({ origin: allowedOrigins }));
 app.use(express.json());
 
 // Global rate limit: 100 requests per 15 minutes per IP

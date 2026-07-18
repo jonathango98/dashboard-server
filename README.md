@@ -34,7 +34,7 @@ Copy `.env.example` to `.env` and fill in your keys:
 ```env
 OPENWEATHERMAP_API_KEY=your_openweathermap_key
 GMAPS_API_KEY=your_google_maps_key
-ALLOWED_ORIGIN=http://localhost:5173   # Frontend origin for CORS
+ALLOWED_ORIGIN=http://localhost:5173   # Frontend origin(s) for CORS, comma-separated
 PORT=3001
 ```
 
